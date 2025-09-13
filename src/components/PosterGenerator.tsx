@@ -6,6 +6,7 @@ import { PosterCanvas } from "./PosterCanvas";
 import { NameInput } from "./NameInput";
 import { GenerateButton } from "./GenerateButton";
 import { toast } from "sonner";
+import posterTemplate from "@/assets/poster-template.jpg";
 
 export interface PosterData {
   name: string;
@@ -61,61 +62,96 @@ export const PosterGenerator = () => {
         throw new Error('Canvas not supported');
       }
 
-      // Set canvas size for the poster
-      canvas.width = 800;
-      canvas.height = 1000;
+      // Set canvas size to match template
+      canvas.width = 1080;
+      canvas.height = 1080;
 
-      // Create poster background
-      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-      gradient.addColorStop(0, 'hsl(200, 95%, 45%)');
-      gradient.addColorStop(1, 'hsl(185, 85%, 50%)');
-      
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Add workshop title
-      ctx.fillStyle = 'white';
-      ctx.font = 'bold 48px Inter, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('N8N WORKSHOP', canvas.width / 2, 100);
-      
-      // Add "I'm Attending" text
-      ctx.font = '32px Inter, sans-serif';
-      ctx.fillText("I'm Attending", canvas.width / 2, 160);
-
-      // Load and draw user photo
-      const img = new Image();
+      // Load the template image
+      const templateImg = new Image();
       await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = posterData.photo!;
+        templateImg.onload = resolve;
+        templateImg.onerror = reject;
+        templateImg.src = posterTemplate;
       });
 
-      // Draw photo in a circle
-      const photoSize = 300;
-      const photoX = (canvas.width - photoSize) / 2;
-      const photoY = 220;
-      
+      // Draw the template as background
+      ctx.drawImage(templateImg, 0, 0, canvas.width, canvas.height);
+
+      // Load and draw user photo in the top left box
+      const userImg = new Image();
+      await new Promise((resolve, reject) => {
+        userImg.onload = resolve;
+        userImg.onerror = reject;
+        userImg.src = posterData.photo!;
+      });
+
+      // Top box coordinates (based on template layout)
+      const topBoxX = 108;
+      const topBoxY = 115;
+      const topBoxWidth = 430;
+      const topBoxHeight = 430;
+
+      // Create rounded rectangle mask for top box
       ctx.save();
+      const radius = 20;
       ctx.beginPath();
-      ctx.arc(photoX + photoSize / 2, photoY + photoSize / 2, photoSize / 2, 0, Math.PI * 2);
+      ctx.roundRect(topBoxX, topBoxY, topBoxWidth, topBoxHeight, radius);
       ctx.clip();
-      ctx.drawImage(img, photoX, photoY, photoSize, photoSize);
+      
+      // Draw user photo to fill the top box
+      ctx.drawImage(userImg, topBoxX, topBoxY, topBoxWidth, topBoxHeight);
       ctx.restore();
 
-      // Add user name
-      ctx.fillStyle = 'white';
-      ctx.font = 'bold 42px Inter, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(posterData.name, canvas.width / 2, 600);
+      // Add user name in the bottom left box
+      const nameBoxX = 108;
+      const nameBoxY = 570;
+      const nameBoxWidth = 430;
+      const nameBoxHeight = 180;
 
-      // Add event details
-      ctx.font = '24px Inter, sans-serif';
-      ctx.fillText('The Student Spot & Founders Hub', canvas.width / 2, 750);
+      // Set text properties for name
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 36px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       
-      ctx.font = '20px Inter, sans-serif';
-      ctx.fillStyle = 'hsl(45, 95%, 55%)';
-      ctx.fillText('Join us for an amazing workshop!', canvas.width / 2, 800);
+      // Calculate text position (center of bottom box)
+      const textX = nameBoxX + nameBoxWidth / 2;
+      const textY = nameBoxY + nameBoxHeight / 2;
+      
+      // Draw name with text wrapping if needed
+      const maxWidth = nameBoxWidth - 40; // Some padding
+      const words = posterData.name.split(' ');
+      let line = '';
+      let y = textY;
+      
+      if (words.length === 1 || ctx.measureText(posterData.name).width <= maxWidth) {
+        // Single line
+        ctx.fillText(posterData.name, textX, y);
+      } else {
+        // Multi-line text
+        const lineHeight = 45;
+        const lines: string[] = [];
+        
+        for (let n = 0; n < words.length; n++) {
+          const testLine = line + words[n] + ' ';
+          const metrics = ctx.measureText(testLine);
+          const testWidth = metrics.width;
+          
+          if (testWidth > maxWidth && n > 0) {
+            lines.push(line.trim());
+            line = words[n] + ' ';
+          } else {
+            line = testLine;
+          }
+        }
+        lines.push(line.trim());
+        
+        // Draw lines centered
+        const startY = textY - ((lines.length - 1) * lineHeight) / 2;
+        for (let i = 0; i < lines.length; i++) {
+          ctx.fillText(lines[i], textX, startY + (i * lineHeight));
+        }
+      }
 
       // Convert to blob and create download URL
       const blob = await new Promise<Blob>((resolve) => {
@@ -139,7 +175,7 @@ export const PosterGenerator = () => {
     
     const link = document.createElement('a');
     link.href = finalPoster;
-    link.download = `${posterData.name}-n8n-workshop-poster.png`;
+    link.download = `${posterData.name.replace(/\s+/g, '_')}-N8N-Workshop-Sept14.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -168,7 +204,7 @@ export const PosterGenerator = () => {
             N8N Workshop Poster Generator
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Create your personalized "I'm Attending" poster for the N8N Workshop hosted by The Student Spot & Founders Hub
+            Upload your photo and name to create your official "I'm Attending" poster for the N8N Workshop on September 14th
           </p>
         </div>
 
