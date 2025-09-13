@@ -47,6 +47,15 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        workshop: {
+          primary: "hsl(var(--workshop-primary))",
+          secondary: "hsl(var(--workshop-secondary))",
+          accent: "hsl(var(--workshop-accent))",
+        },
+        poster: {
+          text: "hsl(var(--poster-text))",
+          accent: "hsl(var(--poster-accent))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -57,6 +66,19 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+      },
+      backgroundImage: {
+        'workshop-gradient': 'var(--workshop-gradient)',
+        'workshop-soft': 'var(--workshop-gradient-soft)',
+        'poster-bg': 'var(--poster-bg)',
+      },
+      boxShadow: {
+        'hover-lift': 'var(--hover-lift)',
+        'hover-glow': 'var(--hover-glow)',
+      },
+      transitionTimingFunction: {
+        'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
+        'bounce': 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
       },
       borderRadius: {
         lg: "var(--radius)",
