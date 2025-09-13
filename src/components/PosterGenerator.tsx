@@ -25,6 +25,16 @@ export const PosterGenerator = () => {
   const [finalPoster, setFinalPoster] = useState<string | null>(null);
 
   const handlePhotoUpload = useCallback((file: File, dataUrl: string) => {
+    // Handle photo removal case
+    if (!dataUrl || dataUrl === '') {
+      setPosterData(prev => ({
+        ...prev,
+        photo: null,
+        photoFile: null,
+      }));
+      return;
+    }
+    
     setPosterData(prev => ({
       ...prev,
       photo: dataUrl,
@@ -98,8 +108,27 @@ export const PosterGenerator = () => {
       ctx.roundRect(topBoxX, topBoxY, topBoxWidth, topBoxHeight, radius);
       ctx.clip();
       
-      // Draw user photo to fill the top box
-      ctx.drawImage(userImg, topBoxX, topBoxY, topBoxWidth, topBoxHeight);
+      // Calculate the best crop for the image to fit the box
+      const aspectRatio = userImg.width / userImg.height;
+      const boxAspectRatio = topBoxWidth / topBoxHeight;
+      
+      let drawWidth = topBoxWidth;
+      let drawHeight = topBoxHeight;
+      let drawX = topBoxX;
+      let drawY = topBoxY;
+      
+      if (aspectRatio > boxAspectRatio) {
+        // Image is wider than box - crop sides
+        drawWidth = topBoxHeight * aspectRatio;
+        drawX = topBoxX - (drawWidth - topBoxWidth) / 2;
+      } else {
+        // Image is taller than box - crop top/bottom
+        drawHeight = topBoxWidth / aspectRatio;
+        drawY = topBoxY - (drawHeight - topBoxHeight) / 2;
+      }
+      
+      // Draw user photo with proper cropping
+      ctx.drawImage(userImg, drawX, drawY, drawWidth, drawHeight);
       ctx.restore();
 
       // Add user name in the bottom left box
@@ -108,9 +137,9 @@ export const PosterGenerator = () => {
       const nameBoxWidth = 430;
       const nameBoxHeight = 180;
 
-      // Set text properties for name
+      // Set text properties for name to match template style
       ctx.fillStyle = 'white';
-      ctx.font = 'bold 36px Inter, sans-serif';
+      ctx.font = 'bold 32px "Segoe UI", Tahoma, Geneva, Verdana, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       
@@ -200,9 +229,12 @@ export const PosterGenerator = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold bg-workshop-gradient bg-clip-text text-transparent mb-4">
+          <h1 className="text-5xl font-bold bg-workshop-gradient bg-clip-text text-transparent mb-2">
             N8N Workshop Poster Generator
           </h1>
+          <p className="text-lg text-muted-foreground/80 mb-4">
+            Organised by Founders Hub and The Student Spot
+          </p>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Upload your photo and name to create your official "I'm Attending" poster for the N8N Workshop on September 14th
           </p>

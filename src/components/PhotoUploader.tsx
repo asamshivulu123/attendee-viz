@@ -59,7 +59,9 @@ export const PhotoUploader = ({ onPhotoUpload, currentPhoto }: PhotoUploaderProp
   }, []);
 
   const handleRemovePhoto = useCallback(() => {
-    onPhotoUpload(null as any, null as any);
+    // Reset photo by creating empty file and data
+    const emptyFile = new File([], '', { type: 'image/jpeg' });
+    onPhotoUpload(emptyFile, '');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
